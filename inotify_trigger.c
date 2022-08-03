@@ -46,14 +46,23 @@ void handle_events(int fd, int *wd) {
 
   struct inotify_event *event = (struct inotify_event *)buf;
 
-  if (event->mask & IN_OPEN) {
-    printf("IN_OPEN\n");
-  }
-  if (event->mask & IN_CLOSE_NOWRITE) {
-    printf("IN_CLOSE_NOWRITE\n");
-  }
-  if (event->mask & IN_CLOSE_WRITE) {
-    printf("IN_CLOSE_WRITE\n");
+  FOO(IN_ACCESS)
+  FOO(IN_ATTRIB)
+  FOO(IN_CLOSE)
+  FOO(IN_CLOSE_NOWRITE)
+  FOO(IN_CLOSE_WRITE)
+  FOO(IN_CREATE)
+  FOO(IN_DELETE)
+  FOO(IN_DELETE_SELF)
+  FOO(IN_MODIFY)
+  FOO(IN_MOVE)
+  FOO(IN_MOVED_FROM)
+  FOO(IN_MOVE_SELF)
+  FOO(IN_OPEN)
+
+  if (event->mask & IN_IGNORED) {
+    printf("IN_IGNORED\n");
+    reload_watches();
   }
 }
 
