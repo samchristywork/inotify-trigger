@@ -64,6 +64,18 @@ void handle_events(int fd, int *wd) {
     printf("IN_IGNORED\n");
     reload_watches();
   }
+  fflush(stdout);
+}
+
+void usage(char *argv[]) {
+  fprintf(stderr,
+          "Usage: %s [-c command] [-r milliseconds] [file(s)]\n"
+          " -c\tCommand to run (string).\n"
+          " -h\tPrint this usage message.\n"
+          " -r\tPeriod to repeat the command in milliseconds.\n"
+          "",
+          argv[0]);
+  exit(EXIT_FAILURE);
 }
 
 int main(int argc, char *argv[]) {
