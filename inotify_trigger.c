@@ -80,24 +80,50 @@ void usage(char *argv[]) {
 
 int main(int argc, char *argv[]) {
 
+  int refresh = 0;
+
+  int opt;
+  char *optstring = "c:hr:";
+  while ((opt = getopt(argc, argv, optstring)) != -1) {
+    if (opt == 'c') {
+      command = malloc(strlen(optarg));
+      if (command == NULL) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+      }
+      strcpy(command, optarg);
+    } else if (opt == 'h') {
+      usage(argv);
+    } else if (opt == 'r') {
+      refresh = atoi(optarg);
+    } else {
+      puts(optarg);
+    }
+  }
+
   int fd = inotify_init1(IN_NONBLOCK);
   if (fd == -1) {
     perror("inotify_init1");
     exit(EXIT_FAILURE);
   }
 
-  int *wd = malloc(argc * sizeof(int));
+  int *wd = malloc((argc - optind) * sizeof(int));
   if (wd == NULL) {
     perror("malloc");
     exit(EXIT_FAILURE);
   }
 
-  for (int i = 1; i < argc; i++) {
-    wd[i] = inotify_add_watch(fd, argv[i], IN_OPEN | IN_CLOSE);
-    if (wd[i] == -1) {
-      perror("inotify_add_watch");
-      exit(EXIT_FAILURE);
+  if (optind < argc) {
+    int i = 0;
+    while (optind < argc) {
+      wd[i] = inotify_add_watch(fd, argv[optind++], IN_OPEN | IN_CLOSE);
+      if (wd[i] == -1) {
+        perror("inotify_add_watch");
+        exit(EXIT_FAILURE);
+      }
+      i++;
     }
+    printf("\n");
   }
 
   struct pollfd fds[2];
