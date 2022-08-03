@@ -1,10 +1,40 @@
 #include <errno.h>
 #include <poll.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/inotify.h>
 #include <unistd.h>
+
+#define FOO(x)             \
+  {                        \
+    if (event->mask & x) { \
+      printf(#x "\n");     \
+    }                      \
+  }
+
+char *command = NULL;
+
+struct pthread_info {
+  int timeout;
+};
+
+void task() {
+  if (command) {
+    system(command);
+  }
+}
+
+static void *periodic_task(void *arg) {
+  struct pthread_info *tinfo = arg;
+  while (1) {
+    task();
+    usleep(tinfo->timeout);
+  }
+}
+
+void reload_watches() { printf("stub\n"); }
 
 void handle_events(int fd, int *wd) {
   char buf[sizeof(struct inotify_event)];
@@ -56,6 +86,13 @@ int main(int argc, char *argv[]) {
 
   fds[1].fd = fd;
   fds[1].events = POLLIN;
+
+  if (refresh) {
+    pthread_t thread;
+    struct pthread_info tinfo;
+    tinfo.timeout = refresh;
+    pthread_create(&thread, NULL, periodic_task, &tinfo);
+  }
 
   while (1) {
     int poll_num = poll(fds, 2, -1);
