@@ -150,7 +150,7 @@ int main(int argc, char *argv[]) {
 
     if (poll_num > 0) {
       if (fds[0].revents & POLLIN) {
-        printf("Hello, World!\n");
+        task();
         char buf[1];
         while (read(fds[0].fd, buf, 1) > 0 && buf[0] != '\n') {
         }
