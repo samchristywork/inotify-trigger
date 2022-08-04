@@ -17,6 +17,9 @@
 char *command = NULL;
 char *shell = "/usr/bin/sh";
 
+int fd;
+int *wd;
+
 struct pthread_info {
   int timeout;
 };
@@ -41,9 +44,26 @@ static void *periodic_task(void *arg) {
   }
 }
 
-void reload_watches() { printf("stub\n"); }
+void reload_watches(int argc, char *argv[]) {
+  for (int i = 0; i < argc - optind; i++) {
+    inotify_rm_watch(fd, wd[i]);
+  }
 
-void handle_events(int fd, int *wd) {
+  if (optind < argc) {
+    int i = optind;
+    while (i < argc) {
+      wd[i] = inotify_add_watch(fd, argv[i], IN_OPEN | IN_CLOSE);
+      printf("Loading %s\n", argv[i]);
+      if (wd[i] == -1) {
+        perror("inotify_add_watch");
+        exit(EXIT_FAILURE);
+      }
+      i++;
+    }
+  }
+}
+
+void handle_events(int fd, int *wd, int argc, char *argv[]) {
   char buf[sizeof(struct inotify_event)];
   ssize_t len = read(fd, buf, sizeof(struct inotify_event));
   if (len != sizeof(struct inotify_event)) {
@@ -71,7 +91,7 @@ void handle_events(int fd, int *wd) {
 
   if (event->mask & IN_IGNORED) {
     printf("IN_IGNORED\n");
-    reload_watches();
+    reload_watches(argc, argv);
   }
   fflush(stdout);
 }
@@ -118,34 +138,19 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  int fd = inotify_init1(IN_NONBLOCK);
+  fd = inotify_init1(IN_NONBLOCK);
   if (fd == -1) {
     perror("inotify_init1");
     exit(EXIT_FAILURE);
   }
 
-  int *wd = malloc((argc - optind) * sizeof(int));
+  wd = malloc((argc - optind) * sizeof(int));
   if (wd == NULL) {
     perror("malloc");
     exit(EXIT_FAILURE);
   }
 
-  for (int i = 0; i < argc - optind; i++) {
-    inotify_rm_watch(fd, wd[i]);
-  }
-
-  if (optind < argc) {
-    int i = 0;
-    while (optind < argc) {
-      wd[i] = inotify_add_watch(fd, argv[optind++], IN_OPEN | IN_CLOSE);
-      if (wd[i] == -1) {
-        perror("inotify_add_watch");
-        exit(EXIT_FAILURE);
-      }
-      i++;
-    }
-    printf("\n");
-  }
+  reload_watches(argc, argv);
 
   struct pollfd fds[2];
 
@@ -178,7 +183,7 @@ int main(int argc, char *argv[]) {
       }
 
       if (fds[1].revents & POLLIN) {
-        handle_events(fd, wd);
+        handle_events(fd, wd, argc, argv);
       }
     }
   }
