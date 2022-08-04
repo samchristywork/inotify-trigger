@@ -16,6 +16,7 @@
 
 char *command = NULL;
 char *shell = "/usr/bin/sh";
+double debounce = 0.1;
 
 int fd;
 int *wd;
@@ -25,6 +26,19 @@ struct pthread_info {
 };
 
 void task() {
+  static struct timespec oldTime = {0};
+  struct timespec newTime;
+  clock_gettime(CLOCK_REALTIME, &newTime);
+  double old = oldTime.tv_sec + (double)oldTime.tv_nsec / 1000000000.;
+  double new = newTime.tv_sec + (double)newTime.tv_nsec / 1000000000.;
+  double difference = new - old;
+
+  if (difference < debounce) {
+    return;
+  }
+
+  oldTime = newTime;
+
   if (command) {
     pid_t pid = fork();
     if (pid == 0) {
@@ -100,6 +114,7 @@ void usage(char *argv[]) {
   fprintf(stderr,
           "Usage: %s [-c command] [-r milliseconds] [-s shell] [file(s)]\n"
           " -c\tCommand to run (string).\n"
+          " -d\tDebounce period in milliseconds (default 100ms).\n"
           " -h\tPrint this usage message.\n"
           " -r\tPeriod to repeat the command in milliseconds.\n"
           " -s\tSpecifies the shell to be used (default /usr/bin/sh).\n"
@@ -113,7 +128,7 @@ int main(int argc, char *argv[]) {
   int refresh = 0;
 
   int opt;
-  char *optstring = "c:hr:s:";
+  char *optstring = "c:d:hr:s:";
   while ((opt = getopt(argc, argv, optstring)) != -1) {
     if (opt == 'c') {
       command = malloc(strlen(optarg));
@@ -122,6 +137,8 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
       }
       strcpy(command, optarg);
+    } else if (opt == 'd') {
+      debounce = (float)atoi(optarg) / 1000.;
     } else if (opt == 'h') {
       usage(argv);
     } else if (opt == 'r') {
