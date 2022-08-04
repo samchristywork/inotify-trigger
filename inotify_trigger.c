@@ -22,7 +22,13 @@ struct pthread_info {
 
 void task() {
   if (command) {
-    system(command);
+    pid_t pid = fork();
+    if(pid==0){
+      int ret = execl(shell, shell, "-c", command, (char *)NULL);
+      if(ret==-1){
+        perror("execl");
+      }
+    }
   }
 }
 
