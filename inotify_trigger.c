@@ -27,9 +27,9 @@ struct pthread_info {
 void task() {
   if (command) {
     pid_t pid = fork();
-    if(pid==0){
+    if (pid == 0) {
       int ret = execl(shell, shell, "-c", command, (char *)NULL);
-      if(ret==-1){
+      if (ret == -1) {
         perror("execl");
       }
     }
