@@ -15,6 +15,7 @@
   }
 
 char *command = NULL;
+char *shell = "/usr/bin/sh";
 
 struct pthread_info {
   int timeout;
@@ -75,10 +76,11 @@ void handle_events(int fd, int *wd) {
 
 void usage(char *argv[]) {
   fprintf(stderr,
-          "Usage: %s [-c command] [-r milliseconds] [file(s)]\n"
+          "Usage: %s [-c command] [-r milliseconds] [-s shell] [file(s)]\n"
           " -c\tCommand to run (string).\n"
           " -h\tPrint this usage message.\n"
           " -r\tPeriod to repeat the command in milliseconds.\n"
+          " -s\tSpecifies the shell to be used (default /usr/bin/sh).\n"
           "",
           argv[0]);
   exit(EXIT_FAILURE);
@@ -89,7 +91,7 @@ int main(int argc, char *argv[]) {
   int refresh = 0;
 
   int opt;
-  char *optstring = "c:hr:";
+  char *optstring = "c:hr:s:";
   while ((opt = getopt(argc, argv, optstring)) != -1) {
     if (opt == 'c') {
       command = malloc(strlen(optarg));
@@ -102,6 +104,13 @@ int main(int argc, char *argv[]) {
       usage(argv);
     } else if (opt == 'r') {
       refresh = atoi(optarg);
+    } else if (opt == 's') {
+      shell = malloc(strlen(optarg));
+      if (shell == NULL) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+      }
+      strcpy(shell, optarg);
     } else {
       puts(optarg);
     }
