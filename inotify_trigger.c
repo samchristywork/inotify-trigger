@@ -67,6 +67,8 @@ void handle_events(int fd, int *wd) {
   FOO(IN_MOVE_SELF)
   FOO(IN_OPEN)
 
+  task();
+
   if (event->mask & IN_IGNORED) {
     printf("IN_IGNORED\n");
     reload_watches();
@@ -126,6 +128,10 @@ int main(int argc, char *argv[]) {
   if (wd == NULL) {
     perror("malloc");
     exit(EXIT_FAILURE);
+  }
+
+  for (int i = 0; i < argc - optind; i++) {
+    inotify_rm_watch(fd, wd[i]);
   }
 
   if (optind < argc) {
