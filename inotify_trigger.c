@@ -1,4 +1,5 @@
 #include <errno.h>
+#include <getopt.h>
 #include <poll.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -113,11 +114,11 @@ void handle_events(int fd, int *wd, int argc, char *argv[]) {
 void usage(char *argv[]) {
   fprintf(stderr,
           "Usage: %s [-c command] [-r milliseconds] [-s shell] [file(s)]\n"
-          " -c\tCommand to run (string).\n"
-          " -d\tDebounce period in milliseconds (default 100ms).\n"
-          " -h\tPrint this usage message.\n"
-          " -r\tPeriod to repeat the command in milliseconds.\n"
-          " -s\tSpecifies the shell to be used (default /usr/bin/sh).\n"
+          " -c,--command   Command to run (string).\n"
+          " -d,--debounce  Debounce period in milliseconds (default 100ms).\n"
+          " -h,--help      Print this usage message.\n"
+          " -r,--repeat    Period to repeat the command in milliseconds.\n"
+          " -s,--shell     Specifies the shell to be used (default /usr/bin/sh).\n"
           "",
           argv[0]);
   exit(EXIT_FAILURE);
@@ -128,8 +129,20 @@ int main(int argc, char *argv[]) {
   int refresh = 0;
 
   int opt;
+  int option_index = 0;
   char *optstring = "c:d:hr:s:";
-  while ((opt = getopt(argc, argv, optstring)) != -1) {
+  static struct option long_options[] = {
+      {"command", required_argument, 0, 'c'},
+      {"debounce", required_argument, 0, 'd'},
+      {"help", no_argument, 0, 'h'},
+      {"repeat", required_argument, 0, 'r'},
+      {"shell", required_argument, 0, 's'},
+      {0, 0, 0, 0},
+  };
+  while ((opt = getopt_long(argc, argv, optstring, long_options, &option_index)) != -1) {
+    if (optopt == 0) {
+      usage(argv);
+    }
     if (opt == 'c') {
       command = malloc(strlen(optarg));
       if (command == NULL) {
