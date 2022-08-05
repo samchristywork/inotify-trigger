@@ -8,11 +8,13 @@
 #include <sys/inotify.h>
 #include <unistd.h>
 
-#define FOO(x)             \
-  {                        \
-    if (event->mask & x) { \
-      printf(#x "\n");     \
-    }                      \
+#define FOO(x)                    \
+  {                               \
+    if (event->mask & x) {        \
+      if (verbose) {              \
+        fprintf(stdout, #x "\n"); \
+      }                           \
+    }                             \
   }
 
 char *command = NULL;
@@ -59,7 +61,7 @@ static void *periodic_task(void *arg) {
   }
 }
 
-void reload_watches(int argc, char *argv[]) {
+void reload_watches(int argc, char *argv[], int verbose) {
   for (int i = 0; i < argc - optind; i++) {
     inotify_rm_watch(fd, wd[i]);
   }
@@ -68,7 +70,9 @@ void reload_watches(int argc, char *argv[]) {
     int i = optind;
     while (i < argc) {
       wd[i] = inotify_add_watch(fd, argv[i], IN_OPEN | IN_CLOSE);
-      printf("Loading %s\n", argv[i]);
+      if (verbose) {
+        fprintf(stdout, "Loading %s\n", argv[i]);
+      }
       if (wd[i] == -1) {
         perror("inotify_add_watch");
         exit(EXIT_FAILURE);
@@ -78,7 +82,7 @@ void reload_watches(int argc, char *argv[]) {
   }
 }
 
-void handle_events(int fd, int *wd, int argc, char *argv[]) {
+void handle_events(int fd, int *wd, int argc, char *argv[], int verbose) {
   char buf[sizeof(struct inotify_event)];
   ssize_t len = read(fd, buf, sizeof(struct inotify_event));
   if (len != sizeof(struct inotify_event)) {
@@ -105,8 +109,10 @@ void handle_events(int fd, int *wd, int argc, char *argv[]) {
   task();
 
   if (event->mask & IN_IGNORED) {
-    printf("IN_IGNORED\n");
-    reload_watches(argc, argv);
+    if (verbose) {
+      fprintf(stdout, "IN_IGNORED\n");
+    }
+    reload_watches(argc, argv, verbose);
   }
   fflush(stdout);
 }
@@ -119,6 +125,7 @@ void usage(char *argv[]) {
           " -h,--help      Print this usage message.\n"
           " -r,--repeat    Period to repeat the command in milliseconds.\n"
           " -s,--shell     Specifies the shell to be used (default /usr/bin/sh).\n"
+          " -v,--verbose   Display additional logging information.\n"
           "",
           argv[0]);
   exit(EXIT_FAILURE);
@@ -127,22 +134,21 @@ void usage(char *argv[]) {
 int main(int argc, char *argv[]) {
 
   int refresh = 0;
+  int verbose = 0;
 
   int opt;
   int option_index = 0;
-  char *optstring = "c:d:hr:s:";
+  char *optstring = "c:d:hr:s:v";
   static struct option long_options[] = {
       {"command", required_argument, 0, 'c'},
       {"debounce", required_argument, 0, 'd'},
       {"help", no_argument, 0, 'h'},
       {"repeat", required_argument, 0, 'r'},
       {"shell", required_argument, 0, 's'},
+      {"verbose", no_argument, 0, 'v'},
       {0, 0, 0, 0},
   };
   while ((opt = getopt_long(argc, argv, optstring, long_options, &option_index)) != -1) {
-    if (optopt == 0) {
-      usage(argv);
-    }
     if (opt == 'c') {
       command = malloc(strlen(optarg));
       if (command == NULL) {
@@ -163,11 +169,18 @@ int main(int argc, char *argv[]) {
         usage(argv);
       }
       strcpy(shell, optarg);
+    } else if (opt == 'v') {
+      verbose = 1;
+    } else if (opt == '?') {
+      usage(argv);
     } else {
       puts(optarg);
     }
   }
 
+  if (verbose) {
+    fprintf(stderr, "Initializing inotify.\n");
+  }
   fd = inotify_init1(IN_NONBLOCK);
   if (fd == -1) {
     perror("inotify_init1");
@@ -180,7 +193,10 @@ int main(int argc, char *argv[]) {
     usage(argv);
   }
 
-  reload_watches(argc, argv);
+  if (verbose) {
+    fprintf(stderr, "Loading inotify watches.\n");
+  }
+  reload_watches(argc, argv, verbose);
 
   struct pollfd fds[2];
 
@@ -191,12 +207,18 @@ int main(int argc, char *argv[]) {
   fds[1].events = POLLIN;
 
   if (refresh) {
+    if (verbose) {
+      fprintf(stderr, "Setting refresh task in pthread.\n");
+    }
     pthread_t thread;
     struct pthread_info tinfo;
     tinfo.timeout = refresh;
     pthread_create(&thread, NULL, periodic_task, &tinfo);
   }
 
+  if (verbose) {
+    fprintf(stderr, "Entering main loop.\n");
+  }
   while (1) {
     int poll_num = poll(fds, 2, -1);
     if (poll_num == -1) {
@@ -206,18 +228,27 @@ int main(int argc, char *argv[]) {
 
     if (poll_num > 0) {
       if (fds[0].revents & POLLIN) {
+        if (verbose) {
+          fprintf(stderr, "Got user input.\n");
+        }
         task();
         char buf[1];
         while (read(fds[0].fd, buf, 1) > 0 && buf[0] != '\n') {
         }
       }
 
+      if (verbose) {
+        fprintf(stderr, "Inotify event detected.\n");
+      }
       if (fds[1].revents & POLLIN) {
-        handle_events(fd, wd, argc, argv);
+        handle_events(fd, wd, argc, argv, verbose);
       }
     }
   }
 
+  if (verbose) {
+    fprintf(stderr, "Cleaning up.\n");
+  }
   close(fd);
   free(wd);
   exit(EXIT_SUCCESS);
