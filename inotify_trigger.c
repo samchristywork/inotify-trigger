@@ -17,7 +17,7 @@
 
 char *command = NULL;
 char *shell = "/usr/bin/sh";
-double debounce = 0.1;
+double debounce = 0.5;
 
 int fd;
 int *wd;
@@ -147,7 +147,7 @@ int main(int argc, char *argv[]) {
       command = malloc(strlen(optarg));
       if (command == NULL) {
         perror("malloc");
-        exit(EXIT_FAILURE);
+        usage(argv);
       }
       strcpy(command, optarg);
     } else if (opt == 'd') {
@@ -160,7 +160,7 @@ int main(int argc, char *argv[]) {
       shell = malloc(strlen(optarg));
       if (shell == NULL) {
         perror("malloc");
-        exit(EXIT_FAILURE);
+        usage(argv);
       }
       strcpy(shell, optarg);
     } else {
@@ -171,13 +171,13 @@ int main(int argc, char *argv[]) {
   fd = inotify_init1(IN_NONBLOCK);
   if (fd == -1) {
     perror("inotify_init1");
-    exit(EXIT_FAILURE);
+    usage(argv);
   }
 
   wd = malloc((argc - optind) * sizeof(int));
   if (wd == NULL) {
     perror("malloc");
-    exit(EXIT_FAILURE);
+    usage(argv);
   }
 
   reload_watches(argc, argv);
