@@ -26,7 +26,7 @@ int fd;
 int *wd;
 
 struct pthread_info {
-  int timeout;
+  useconds_t timeout;
 };
 
 void task() {
@@ -132,15 +132,15 @@ void usage(char *argv[]) {
   exit(EXIT_FAILURE);
 }
 
-int string_to_ms(char *str) {
-  int value = atoi(str);
+useconds_t string_to_us(char *str) {
+  useconds_t value = atoi(str);
   char *unit;
   for (unit = str;; unit++) {
     if (isalpha(unit[0]) || unit[0] == 0) {
       break;
     }
   }
-  int multiplier = 1;
+  useconds_t multiplier = 1;
   if (strcmp(unit, "us") == 0) {
     multiplier = 1;
   }
@@ -164,7 +164,7 @@ int string_to_ms(char *str) {
 
 int main(int argc, char *argv[]) {
 
-  int refresh = 0;
+  useconds_t refresh = 0;
   int verbose = 0;
 
   int opt;
@@ -192,7 +192,7 @@ int main(int argc, char *argv[]) {
     } else if (opt == 'h') {
       usage(argv);
     } else if (opt == 'r') {
-      refresh = string_to_ms(optarg);
+      refresh = string_to_us(optarg);
     } else if (opt == 's') {
       shell = malloc(strlen(optarg));
       if (shell == NULL) {
