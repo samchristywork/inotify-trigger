@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <errno.h>
 #include <getopt.h>
 #include <poll.h>
@@ -131,6 +132,36 @@ void usage(char *argv[]) {
   exit(EXIT_FAILURE);
 }
 
+int string_to_ms(char *str) {
+  int value = atoi(str);
+  char *unit;
+  for (unit = str;; unit++) {
+    if (isalpha(unit[0]) || unit[0] == 0) {
+      break;
+    }
+  }
+  int multiplier = 1;
+  if (strcmp(unit, "us") == 0) {
+    multiplier = 1;
+  }
+  if (strcmp(unit, "ms") == 0) {
+    multiplier = 1000;
+  }
+  if (strcmp(unit, "s") == 0) {
+    multiplier = 1000 * 1000;
+  }
+  if (strcmp(unit, "m") == 0) {
+    multiplier = 1000 * 1000 * 60;
+  }
+  if (strcmp(unit, "h") == 0) {
+    multiplier = 1000 * 1000 * 60 * 60;
+  }
+  if (strcmp(unit, "d") == 0) {
+    multiplier = 1000 * 1000 * 60 * 60 * 24;
+  }
+  return value * multiplier;
+}
+
 int main(int argc, char *argv[]) {
 
   int refresh = 0;
@@ -161,7 +192,7 @@ int main(int argc, char *argv[]) {
     } else if (opt == 'h') {
       usage(argv);
     } else if (opt == 'r') {
-      refresh = atoi(optarg);
+      refresh = string_to_ms(optarg);
     } else if (opt == 's') {
       shell = malloc(strlen(optarg));
       if (shell == NULL) {
