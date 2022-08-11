@@ -153,12 +153,6 @@ useconds_t string_to_us(char *str) {
   if (strcmp(unit, "m") == 0) {
     multiplier = 1000 * 1000 * 60;
   }
-  if (strcmp(unit, "h") == 0) {
-    multiplier = 1000 * 1000 * 60 * 60;
-  }
-  if (strcmp(unit, "d") == 0) {
-    multiplier = 1000 * 1000 * 60 * 60 * 24;
-  }
   return value * multiplier;
 }
 
