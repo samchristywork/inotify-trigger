@@ -182,7 +182,7 @@ int main(int argc, char *argv[]) {
       }
       strcpy(command, optarg);
     } else if (opt == 'd') {
-      debounce = (float)atoi(optarg) / 1000.;
+      debounce = (float)string_to_us(optarg) / 1000000.;
     } else if (opt == 'h') {
       usage(argv);
     } else if (opt == 'r') {
