@@ -19,6 +19,8 @@
     }                                       \
   }
 
+char *separator = "-----SEPARATOR-----";
+int quiet = 0;
 char *command = NULL;
 char *shell = "/usr/bin/sh";
 double debounce = 0.5;
@@ -45,6 +47,7 @@ void task() {
 
   oldTime = newTime;
 
+  puts(separator);
   if (command) {
     pid_t pid = fork();
     if (pid == 0) {
@@ -124,6 +127,8 @@ void usage(char *argv[]) {
           " -c,--command   Command to run (string).\n"
           " -d,--debounce  Debounce period in milliseconds (default 100ms).\n"
           " -h,--help      Print this usage message.\n"
+          " -p,--separator The string to use to separate commands.\n"
+          " -q,--quiet     Don't spawn unnecessary messages.\n"
           " -r,--repeat    Period to repeat the command in milliseconds.\n"
           " -s,--shell     Specifies the shell to be used (default /usr/bin/sh).\n"
           " -v,--verbose   Display additional logging information.\n"
@@ -174,11 +179,13 @@ int main(int argc, char *argv[]) {
 
   int opt;
   int option_index = 0;
-  char *optstring = "c:d:hr:s:v";
+  char *optstring = "c:d:hp:qr:s:v";
   static struct option long_options[] = {
       {"command", required_argument, 0, 'c'},
       {"debounce", required_argument, 0, 'd'},
       {"help", no_argument, 0, 'h'},
+      {"separator", required_argument, 0, 'p'},
+      {"quiet", no_argument, 0, 'q'},
       {"repeat", required_argument, 0, 'r'},
       {"shell", required_argument, 0, 's'},
       {"verbose", no_argument, 0, 'v'},
@@ -196,6 +203,11 @@ int main(int argc, char *argv[]) {
       debounce = (float)string_to_us(optarg) / 1000000.;
     } else if (opt == 'h') {
       usage(argv);
+    } else if (opt == 'p') {
+      separator = malloc(strlen(optarg) + 1);
+      strcpy(separator, optarg);
+    } else if (opt == 'q') {
+      quiet = 1;
     } else if (opt == 'r') {
       refresh = string_to_us(optarg);
     } else if (opt == 's') {
@@ -258,6 +270,9 @@ int main(int argc, char *argv[]) {
   while (1) {
     int poll_num = poll(fds, 2, -1);
     if (poll_num == -1) {
+      if (!running) {
+        break;
+      }
       perror("poll");
       exit(EXIT_FAILURE);
     }
