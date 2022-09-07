@@ -26,8 +26,8 @@ char *shell = "/usr/bin/sh";
 double debounce = 0.5;
 int running = 1;
 
-int fd;
-int *wd;
+int fd = 0;
+int *wd = 0;
 
 struct pthread_info {
   useconds_t timeout;
@@ -42,6 +42,9 @@ void task() {
   double difference = new - old;
 
   if (difference < debounce) {
+    if (quiet == 0) {
+      fprintf(stderr, "Hit debounce. Disable with -d0 or suppress this message with -q.\n");
+    }
     return;
   }
 
@@ -65,6 +68,7 @@ static void *periodic_task(void *arg) {
     task();
     usleep(tinfo->timeout);
   }
+  return NULL;
 }
 
 void reload_watches(int argc, char *argv[], int verbose) {
@@ -193,7 +197,7 @@ int main(int argc, char *argv[]) {
   };
   while ((opt = getopt_long(argc, argv, optstring, long_options, &option_index)) != -1) {
     if (opt == 'c') {
-      command = malloc(strlen(optarg));
+      command = malloc(strlen(optarg) + 1);
       if (command == NULL) {
         perror("malloc");
         usage(argv);
@@ -235,11 +239,12 @@ int main(int argc, char *argv[]) {
     usage(argv);
   }
 
-  wd = malloc((argc - optind) * sizeof(int));
+  wd = malloc((argc - optind + 4) * sizeof(int));
   if (wd == NULL) {
     perror("malloc");
     usage(argv);
   }
+  bzero(wd, (argc - optind) * sizeof(int));
 
   if (verbose) {
     fprintf(stderr, "Loading inotify watches.\n");
@@ -299,6 +304,9 @@ int main(int argc, char *argv[]) {
 
   if (verbose) {
     fprintf(stderr, "Cleaning up.\n");
+  }
+  if (command) {
+    free(command);
   }
   close(fd);
   free(wd);
