@@ -7,6 +7,9 @@ PREFIX = /usr/local
 
 all: build/inotify_trigger
 
+test: all
+	./build/inotify_trigger -q -c "echo 'test'" Makefile
+
 build/inotify_trigger: src/inotify_trigger.c
 	mkdir -p build/
 	${CC} ${CFLAGS} $^ -o $@ ${LIBS}
