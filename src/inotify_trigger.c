@@ -3,6 +3,7 @@
 #include <getopt.h>
 #include <poll.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -156,7 +157,18 @@ useconds_t string_to_us(char *str) {
   return value * multiplier;
 }
 
+void sig_term_handler(int signum, siginfo_t *info, void *ptr) {
+  fprintf(stderr, "Received SIGINT, exiting.\n");
+  running = 0;
+}
+
 int main(int argc, char *argv[]) {
+
+  struct sigaction act;
+  bzero(&act, sizeof(struct sigaction));
+  act.sa_sigaction = sig_term_handler;
+  act.sa_flags = SA_SIGINFO;
+  sigaction(SIGINT, &act, NULL);
 
   useconds_t refresh = 0;
   int verbose = 0;
