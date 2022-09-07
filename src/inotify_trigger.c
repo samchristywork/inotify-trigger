@@ -122,6 +122,11 @@ void handle_events(int fd, int *wd, int argc, char *argv[], int verbose) {
     }
     reload_watches(argc, argv, verbose);
   }
+
+  if (event->mask & (IN_IGNORED | IN_CLOSE_WRITE | IN_CREATE | IN_DELETE | IN_DELETE_SELF | IN_MODIFY | IN_MOVE | IN_MOVED_FROM | IN_MOVE_SELF)) {
+    task();
+  }
+
   fflush(stdout);
 }
 
