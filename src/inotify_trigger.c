@@ -10,18 +10,19 @@
 #include <sys/inotify.h>
 #include <unistd.h>
 
-#define FOO(x)                    \
-  {                               \
-    if (event->mask & x) {        \
-      if (verbose) {              \
-        fprintf(stdout, #x "\n"); \
-      }                           \
-    }                             \
+#define REPORT_EVENT(x)                     \
+  {                                         \
+    if (event->mask & x) {                  \
+      if (verbose) {                        \
+        fprintf(stdout, "Event: " #x "\n"); \
+      }                                     \
+    }                                       \
   }
 
 char *command = NULL;
 char *shell = "/usr/bin/sh";
 double debounce = 0.5;
+int running = 1;
 
 int fd;
 int *wd;
@@ -94,21 +95,19 @@ void handle_events(int fd, int *wd, int argc, char *argv[], int verbose) {
 
   struct inotify_event *event = (struct inotify_event *)buf;
 
-  FOO(IN_ACCESS)
-  FOO(IN_ATTRIB)
-  FOO(IN_CLOSE)
-  FOO(IN_CLOSE_NOWRITE)
-  FOO(IN_CLOSE_WRITE)
-  FOO(IN_CREATE)
-  FOO(IN_DELETE)
-  FOO(IN_DELETE_SELF)
-  FOO(IN_MODIFY)
-  FOO(IN_MOVE)
-  FOO(IN_MOVED_FROM)
-  FOO(IN_MOVE_SELF)
-  FOO(IN_OPEN)
-
-  task();
+  //REPORT_EVENT(IN_ACCESS)
+  //REPORT_EVENT(IN_ATTRIB)
+  //REPORT_EVENT(IN_CLOSE)
+  //REPORT_EVENT(IN_CLOSE_NOWRITE)
+  REPORT_EVENT(IN_CLOSE_WRITE)
+  REPORT_EVENT(IN_CREATE)
+  REPORT_EVENT(IN_DELETE)
+  REPORT_EVENT(IN_DELETE_SELF)
+  REPORT_EVENT(IN_MODIFY)
+  REPORT_EVENT(IN_MOVE)
+  REPORT_EVENT(IN_MOVED_FROM)
+  REPORT_EVENT(IN_MOVE_SELF)
+  //REPORT_EVENT(IN_OPEN)
 
   if (event->mask & IN_IGNORED) {
     if (verbose) {
