@@ -2,6 +2,11 @@
 
 ## Overview
 
+Inotify is a Linux API for monitoring file-system events. This program leverages
+the Inotify API to run commands when events happen, which can be used to
+automatically re-compile programs when the source code is changed, reload
+services when config files are saved, or many other use cases.
+
 ## Example
 
 ## Usage
