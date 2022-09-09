@@ -18,6 +18,20 @@ inotify_trigger -c "cd src/ && gcc *.c -o main -lm && ./main" src/main.c
 
 ## Usage
 
+Here is the usage information for this program:
+
+```
+Usage: inotify_trigger [-c command] [-r milliseconds] [-s shell] [file(s)]
+ -c,--command   Command to run (string).
+ -d,--debounce  Debounce period in milliseconds (default 100ms).
+ -h,--help      Print this usage message.
+ -p,--separator The string to use to separate commands.
+ -q,--quiet     Don't spawn unnecessary messages.
+ -r,--repeat    Period to repeat the command in milliseconds.
+ -s,--shell     Specifies the shell to be used (default /usr/bin/sh).
+ -v,--verbose   Display additional logging information.
+```
+
 ## Dependencies
 
 ## License
