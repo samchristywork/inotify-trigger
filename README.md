@@ -9,6 +9,13 @@ services when config files are saved, or many other use cases.
 
 ## Example
 
+In this example, the program monitors the file `src/main.c` and compiles and
+runs the code when the file is saved to disk.
+
+```
+inotify_trigger -c "cd src/ && gcc *.c -o main -lm && ./main" src/main.c
+```
+
 ## Usage
 
 ## Dependencies
