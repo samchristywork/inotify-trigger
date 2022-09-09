@@ -34,6 +34,9 @@ Usage: inotify_trigger [-c command] [-r milliseconds] [-s shell] [file(s)]
 
 ## Dependencies
 
+There are no dependencies besides a C compiler and Make. The Inotify API is part
+of Linux and does not need a package to be used.
+
 ## License
 
 This work is licensed under the GNU General Public License version 3 (GPLv3).
