@@ -37,6 +37,13 @@ Usage: inotify_trigger [-c command] [-r milliseconds] [-s shell] [file(s)]
 There are no dependencies besides a C compiler and Make. The Inotify API is part
 of Linux and does not need a package to be used.
 
+## Acknowledgements
+
+This program is similar to, and in some cases modelled after, the programs
+`inotifywait` and `entr`. I have used both of these programs extensively. This
+repository is an attempt to build upon the strengths of both of these programs
+and to add some features that I felt were sorely needed.
+
 ## License
 
 This work is licensed under the GNU General Public License version 3 (GPLv3).
