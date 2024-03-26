@@ -1,4 +1,4 @@
-![Banner](https://s-christy.com/status-banner-service/inotify-trigger/banner-slim.svg)
+![Banner](https://s-christy.com/sbs/status-banner.svg?icon=action/update&hue=50&title=Inotify%20Trigger&description=A%20simple%20and%20reasonable%20alternative%20to%20entr)
 
 ## Overview
 
